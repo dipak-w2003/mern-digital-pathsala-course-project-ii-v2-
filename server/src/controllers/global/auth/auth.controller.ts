@@ -3,12 +3,13 @@ import User from "../../../database/models/user.model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sequelize from "../../../database/connection";
+import { UserRole } from "../../../middleware/type";
 export class AuthController {
   static async registerUser(req: Request, res: Response) {
-    const { username, password, email } = req.body;
+    const { username, password, email, type } = req.body;
 
     // ✅ 1. Input validation
-    if (!username || !password || !email) {
+    if (!username || !password || !email || !type) {
       return res.status(400).json({
         message: "All fields are required.",
       });
@@ -32,7 +33,8 @@ export class AuthController {
       await User.create({
         username,
         password: hashedPassword,
-        email,
+        email: email,
+        // role: type === UserRole.Student ? "student" : "institute",
       });
 
       return res.status(201).json({
@@ -65,7 +67,7 @@ export class AuthController {
       where: {
         email,
       },
-     });
+    });
 
     console.log("found user : ", data);
 
