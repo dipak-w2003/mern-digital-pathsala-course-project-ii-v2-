@@ -60,4 +60,7 @@ export class LessonController {
       data,
     });
   }
+
+  static async deleteChapterLesson(req: IExtendedRequest, res: Response) {}
+  static async getSingleChapterLesson(req: IExtendedRequest, res: Response) {}
 }

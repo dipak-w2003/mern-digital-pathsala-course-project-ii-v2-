@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../database/models/user.model";
-import { IExtendedRequest } from "./type";
+import { IExtendedRequest, UserRole } from "./type";
 
 export class Middleware {
   // NextFunction express based method which triggers next function/method
@@ -32,7 +32,7 @@ export class Middleware {
         // Verification 3: 'User' Data-List Verification
         const userData = await User.findByPk(successMessage.id, {
           // NOTE : data accessing or passing limitation set
-          attributes: ["id", "currentInstituteNumber"],
+          attributes: ["id", "currentInstituteNumber", "role"],
         });
         console.log(userData);
         if (!userData) {
@@ -46,6 +46,19 @@ export class Middleware {
         }
       }
     );
+  }
+
+  static restrictTo(...roles: UserRole[]) {
+    return function (req: IExtendedRequest, res: Response, next: NextFunction) {
+      let userRole = req.user?.role as UserRole;
+      if (roles.includes(userRole)) {
+        next();
+      } else {
+        res.status(403).json({
+          message: "Invalid, Access Denied !!",
+        });
+      }
+    };
   }
 
   // static restrictTo(req: Request, res: Response, next: NextFunction) { }

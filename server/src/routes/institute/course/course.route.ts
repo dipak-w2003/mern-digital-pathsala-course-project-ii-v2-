@@ -5,6 +5,7 @@ import asyncErrorHandler from "../../../services/asyncErrorHandler.service";
 // Two Multer Uploads
 import { upload as MulterLocalUpload } from "../../../middleware/multerUpload";
 import { upload2 as MulterOnlineUpload } from "../../../middleware/multerUpload2";
+import { UserRole } from "../../../middleware/type";
 
 const router: Router = Router();
 
@@ -12,6 +13,7 @@ router
   .route("/")
   .post(
     Middleware.isLoggedIn,
+    Middleware.restrictTo(UserRole.Institute),
     MulterLocalUpload.single("courseThumbnail"),
     asyncErrorHandler(CourseController.createCourse)
   )
@@ -21,10 +23,12 @@ router
   .route("/:id")
   .get(
     Middleware.isLoggedIn,
+
     asyncErrorHandler(CourseController.getSingleCourse)
   )
   .delete(
     Middleware.isLoggedIn,
+    Middleware.restrictTo(UserRole.Institute),
     asyncErrorHandler(CourseController.deleteCourse)
   );
 

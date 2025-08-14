@@ -82,4 +82,5 @@ export class ChapterController {
       });
     }
   }
+  // Other Methods : Delete, getSingle, update,
 }

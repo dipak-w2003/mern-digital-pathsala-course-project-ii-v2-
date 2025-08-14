@@ -4,6 +4,8 @@ import { generateRandomInstituteNumber } from "../../services/generateRandomInst
 import User from "../../database/models/user.model";
 import { IExtendedRequest } from "../../middleware/type";
 import { seed_data_0 } from "../../seed";
+import { Query } from "mysql2/typings/mysql/lib/protocol/sequences/Query";
+import { QueryTypes } from "sequelize";
 
 export class InstituteController {
   /** @reateInstitute */
@@ -102,6 +104,7 @@ export class InstituteController {
       next();
     }
   }
+
   /**  @createTeacherTable */
   static async createTeacherTable(
     req: IExtendedRequest,
@@ -109,9 +112,8 @@ export class InstituteController {
     next: NextFunction
   ) {
     const instituteNumber = req.user?.currentInstituteNumber;
-    try {
-      if (!instituteNumber) return;
-      await sequelize.query(`CREATE TABLE IF NOT EXISTS teacher_${instituteNumber}(
+    if (!instituteNumber) return;
+    await sequelize.query(`CREATE TABLE IF NOT EXISTS teacher_${instituteNumber}(
               id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()), 
               teacherName VARCHAR(255) NOT NULL, 
               teacherEmail VARCHAR(255) NOT NULL UNIQUE, 
@@ -125,30 +127,7 @@ export class InstituteController {
               createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
               updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
               )`);
-      next();
-    } catch (error) {
-      console.log(" Teacher Table Error", error);
-    }
-  }
-  /**  @createCourseChapter */
-  static async createCourseChapter(
-    req: IExtendedRequest,
-    res: Response,
-    next: NextFunction
-  ) {
-    const instituteNumber = req.user?.currentInstituteNumber;
-    await sequelize.query(`CREATE TABLE IF NOT EXISTS course_chapter_${instituteNumber}(
-      id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-      chapterName VARCHAR(255) NOT NULL,
-      chapterDuration VARCHAR(100) NOT NULL,
-      courseLevel ENUM('beginner','intermediate','advance') NOT NULL,
-      courseId VARCHAR(255) REFERENCE course_${instituteNumber}(id) ON DELETE CASCADE ON UPDATE CASCADE,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )`);
     next();
-    // EXPLAIN 🧑‍🏫 : courseId VARCHAR(255) REFERENCE course_${instituteNumber}(id) ON DELETE CASCADE ON UPDATE CASCADE
-    // courseId.id reference from course_xyz and it should be dynamic showing when course.id is being updated or deleted
   }
 
   /**  @createStudentTable */
@@ -176,6 +155,35 @@ export class InstituteController {
       console.log("Student Table Error ", error);
     }
   }
+
+  /**  @createCategoryTable */
+  static async createCategoryTable(
+    req: IExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    const instituteNumber = req.user?.currentInstituteNumber;
+    await sequelize.query(`CREATE TABLE IF NOT EXISTS category_${instituteNumber}(
+        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        categoryName VARCHAR(100) NOT NULL,
+        categoryDescription TEXT,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`);
+
+    // data seeding or loop query insert
+    seed_data_0.forEach(async (seed) => {
+      return await sequelize.query(
+        `INSERT INTO category_${instituteNumber}(categoryName,categoryDescription) VALUES(?,?)`,
+        {
+          replacements: [seed["categoryName"], seed["categoryDescription"]],
+        }
+      );
+    });
+
+    next();
+  }
+
   /**  @createCourseTable */
   static async createCourseTable(
     req: IExtendedRequest,
@@ -183,9 +191,7 @@ export class InstituteController {
     next: NextFunction
   ) {
     const instituteNumber = req.user?.currentInstituteNumber;
-    try {
-      if (!instituteNumber) return;
-      await sequelize.query(`CREATE TABLE IF NOT EXISTS course_${instituteNumber}(
+    await sequelize.query(`CREATE TABLE IF NOT EXISTS course_${instituteNumber}(
       id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       courseName VARCHAR(255) NOT NULL UNIQUE,
       coursePrice VARCHAR(255) NOT NULL,
@@ -198,51 +204,56 @@ export class InstituteController {
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
         )`);
-
-      // end of the chaining query/functions
-      res.status(200).json({
-        message:
-          "Institute Successfully created [Institute][Teacher][student][Course][category] :  " +
-          instituteNumber,
-      });
-    } catch (error) {
-      console.log("CourseTable Error ,", error);
-      res.status(500).json({
-        message:
-          "Institute Creation Failure [Institute][Teacher][student][Course][category] :  " +
-          instituteNumber,
-      });
-    }
+    next();
   }
-  /**  @createCategoryTable */
-  static async createCategoryTable(
+
+  /** @Extras */
+  /**  @createCourseChapter */
+  static async createCourseChapter(
     req: IExtendedRequest,
     res: Response,
     next: NextFunction
   ) {
-    try {
-      const instituteNumber = req.user?.currentInstituteNumber;
-      await sequelize.query(`CREATE TABLE IF NOT EXISTS category_${instituteNumber}(
-        id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-        categoryName VARCHAR(100) NOT NULL,
-        categoryDescription TEXT,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )`);
+    const instituteNumber = req.user?.currentInstituteNumber;
+    await sequelize.query(`CREATE TABLE IF NOT EXISTS course_chapter_${instituteNumber}(
+      id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      chapterName VARCHAR(255) NOT NULL,
+      chapterDuration VARCHAR(100) NOT NULL,
+      courseLevel ENUM('beginner','intermediate','advance') NOT NULL,
+      courseId VARCHAR(255) REFERENCES course_${instituteNumber}(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`);
+    next();
+    // EXPLAIN 🧑‍🏫 : courseId VARCHAR(255) REFERENCE course_${instituteNumber}(id) ON DELETE CASCADE ON UPDATE CASCADE
+    // courseId.id reference from course_xyz and it should be dynamic showing when course.id is being updated or deleted
+  }
 
-      // data seeding or loop query insert
-      seed_data_0.forEach(async (seed) => {
-        return await sequelize.query(
-          `INSERT INTO category_${instituteNumber}(categoryName,categoryDescription) VALUES(?,?)`,
-          {
-            replacements: [seed["categoryName"], seed["categoryDescription"]],
-          }
-        );
-      });
-
-      next();
-    } catch (error) {
-      console.log("Create Category Table Error, ", error);
-    }
+  /**  @createChapterLessonTable */
+  static async createChapterLessonTable(
+    req: IExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    const instituteNumber = req.user?.currentInstituteNumber;
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS chapter_lesson_${instituteNumber}(
+    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    lessonName VARCHAR(255) NOT NULL,
+    lessonDescription TEXT,
+    lessonVideoUrl VARCHAR(200) NOT NULL,
+    lessonThumbnailUrl VARCHAR(200) NOT NULL,
+    chapterId VARCHAR(36) REFERENCES course_chapter_${instituteNumber}(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )`,
+      {
+        type: QueryTypes.INSERT,
+      }
+    );
+    // end of the chaining query/functions
+    res.status(200).json({
+      message: "Institute Successfully created  :  " + instituteNumber,
+    });
   }
 }

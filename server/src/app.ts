@@ -6,6 +6,10 @@ import courseRoute from "./routes/institute/course/course.route";
 import categoryRoute from "./routes/institute/category.route";
 import instituteTeacherRoute from "./routes/institute/teacher/teacher.route";
 import teacherRoute from "./routes/teacher/teacher.route";
+import courseChapterRoute from "./routes/teacher/course/chapters/course-chapter-route";
+import courseLessonRoute from "./routes/teacher/course/lessons/course-lesson-route";
+import studentInstituteRoute from "./routes/student/institute/student-institute.route";
+
 const app = express();
 // ✅ Enable CORS for all origins (during development)
 app.use(
@@ -27,6 +31,12 @@ app.use("/api/institute/teacher", instituteTeacherRoute);
 
 //TEACHER ROUTE
 app.use("/api/teacher", teacherRoute);
+app.use("/api/teacher/chapter", courseChapterRoute);
+app.use("/api/teacher/lesson", courseLessonRoute);
+
+// STUDENT ROUTE
+app.use("/api/student", studentInstituteRoute);
+
 app.get("/", (req, res) => {
   res.send("Welcome to Digital Pathsala P2!");
 });
