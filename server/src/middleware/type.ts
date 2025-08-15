@@ -5,6 +5,7 @@ export enum UserRole {
   SuperAdmin = "super-admin",
   Student = "student",
 }
+
 export interface IExtendedRequest extends Request {
   user?: {
     id: string;

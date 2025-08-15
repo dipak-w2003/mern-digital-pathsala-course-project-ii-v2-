@@ -42,36 +42,53 @@ export class Middleware {
           });
         } else {
           req.user = userData;
+          console.log("Hajur ko User Role Check Garum Access Linu Aghi : ", userData.role);
+
           next();
         }
       }
     );
   }
 
+  // Id trimming for table due to unsupported table name as '-'
+  static changeUserIdForTableName(
+    req: IExtendedRequest,
+    response: Response,
+    next: NextFunction
+  ) {
+    if (req.user && req.user.id) {
+      const newUserId = req.user?.id.split("-").join("_");
+      req.user = {
+        ...req.user,
+        id: newUserId,
+      };
+      next();
+    }
+
+  }
+  // Role Based Routing API Execution set . In short RBA Role Based Authorization
   static restrictTo(...roles: UserRole[]) {
-    return function (req: IExtendedRequest, res: Response, next: NextFunction) {
-      let userRole = req.user?.role as UserRole;
-      if (roles.includes(userRole)) {
-        next();
+    return (req: IExtendedRequest, res: Response, next: NextFunction) => {
+      // requesting user ko role k xa tyo liney ani parameter aako role sanga match garne 
+      let userRole = req.user?.role as UserRole
+      console.log(req.user?.role, "restrict o")
+      if (roles?.includes(userRole)) {
+        next()
       } else {
         res.status(403).json({
-          message: "Invalid, Access Denied !!",
-        });
+          message: "Invalid, you dont have access to this.."
+        })
       }
-    };
+    }
   }
-
-  // static restrictTo(req: Request, res: Response, next: NextFunction) { }
 }
 
-/*
-http POST http://localhost:3000/api/institute \
-Authorization:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImUzNDVlMDRiLTA2OTUtNDJkOS1iMTAzLWE2NjkwN2FmM2UyMCIsImlhdCI6MTc1MTA4NzUwOSwiZXhwIjoxNzU4ODYzNTA5fQ.PwXor-KgeO2WyfjmzXJUeHK-rx8Sry3KteM0ScK9Q3A" \
-  instituteName="sudo" \
-  instituteEmail="sudo@example.com" \
-  institutePhoneNumber="sudo" \
-  instituteAddress="sudo" \
-  institutePanNo="sudo" \
-  instituteVatNo="sudo"
+// http POST http://localhost:3000/api/institute \
+// Authorization:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImUzNDVlMDRiLTA2OTUtNDJkOS1iMTAzLWE2NjkwN2FmM2UyMCIsImlhdCI6MTc1MTA4NzUwOSwiZXhwIjoxNzU4ODYzNTA5fQ.PwXor-KgeO2WyfjmzXJUeHK-rx8Sry3KteM0ScK9Q3A" \
+//   instituteName="sudo" \
+//   instituteEmail="sudo@example.com" \
+//   institutePhoneNumber="sudo" \
+//   instituteAddress="sudo" \
+//   institutePanNo="sudo" \
+//   instituteVatNo="sudo"
 
-*/

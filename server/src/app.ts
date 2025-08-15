@@ -9,6 +9,7 @@ import teacherRoute from "./routes/teacher/teacher.route";
 import courseChapterRoute from "./routes/teacher/course/chapters/course-chapter-route";
 import courseLessonRoute from "./routes/teacher/course/lessons/course-lesson-route";
 import studentInstituteRoute from "./routes/student/institute/student-institute.route";
+import studentCartRoute from "./routes/student/cart/student-cart.route";
 
 const app = express();
 // ✅ Enable CORS for all origins (during development)
@@ -36,6 +37,7 @@ app.use("/api/teacher/lesson", courseLessonRoute);
 
 // STUDENT ROUTE
 app.use("/api/student", studentInstituteRoute);
+app.use("/api/student", studentCartRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Digital Pathsala P2!");

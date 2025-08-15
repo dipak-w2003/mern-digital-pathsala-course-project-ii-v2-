@@ -9,7 +9,8 @@ export class AuthController {
     const { username, password, email, type } = req.body;
 
     // ✅ 1. Input validation
-    if (!username || !password || !email || !type) {
+    // type is optional for now
+    if (!username || !password || !email) {
       return res.status(400).json({
         message: "All fields are required.",
       });
@@ -34,6 +35,7 @@ export class AuthController {
         username,
         password: hashedPassword,
         email: email,
+        // optional for now
         // role: type === UserRole.Student ? "student" : "institute",
       });
 
