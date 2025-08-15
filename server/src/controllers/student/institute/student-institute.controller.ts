@@ -36,12 +36,9 @@ export class StudentInstituteController {
   static async instituteCourseListForStudent(req: Request, res: Response) {
     try {
       const { instituteId } = req.params;
-      const courseList = await sequelize.query(
-        `SELECT * FROM course_${instituteId} JOIN category_${instituteId} ON course_${instituteId}.categoryId = category_${instituteId}.id`,
-        {
-          type: QueryTypes.SELECT,
-        }
-      );
+      const courseList = await sequelize.query(`SELECT co.id as courseId,co.courseName,co.courseDescription,co.coursePrice,cat.id,cat.categoryName FROM course_${instituteId} AS co JOIN category_${instituteId} AS cat ON co.categoryId = cat.id`, {
+        type: QueryTypes.SELECT
+      })
 
       if (courseList.length === 0) {
         res.status(404).json({

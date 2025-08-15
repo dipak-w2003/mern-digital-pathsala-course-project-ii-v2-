@@ -16,7 +16,7 @@ export class StudentCartController {
       });
     }
     console.log("createTable : ", userId);
-
+    // BUG 🐛 : even we put random institute id it still create cart table
     await sequelize.query(`CREATE TABLE IF NOT EXISTS student_cart_${userId}(
                id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()), 
             courseId VARCHAR(36) REFERENCES course_${instituteId}(id),
@@ -36,33 +36,24 @@ export class StudentCartController {
     });
   }
   static async fetchStudentCartItems(req: IExtendedRequest, res: Response) {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({
-        message: "Provide User Id :: ASAP",
-      });
-    }
-    const data: { instituteId: string; courseId: string }[] =
-      await sequelize.query(
-        `SELECT courseId, instituteId FROM student_cart_${userId}`,
-        {
-          type: QueryTypes.SELECT,
-        }
-      );
-    const cartDatas = [];
-    for (let dt of data) {
-      const testData = await sequelize.query(
-        `SELECT * FROM course_${dt?.instituteId} WHER id=${dt.courseId}`,
-        {
-          type: QueryTypes.SELECT,
-        }
-      );
-      cartDatas.push(...testData);
+    const userId = req.user?.id
+    console.log("Fetchung ", userId);
+
+    let cartDatas = []
+    const datas: { instituteId: string, courseId: string }[] = await sequelize.query(`SELECT courseId,instituteId FROM student_cart_${userId}`, {
+      type: QueryTypes.SELECT
+    })
+    for (let data of datas) {
+      //69237346-4d84-11f0-ad8d-3e73c3890034
+      const test = await sequelize.query(`SELECT * FROM course_${data.instituteId} WHERE id='${data.courseId}'`, {
+        type: QueryTypes.SELECT
+      })
+      console.log(test)
+      cartDatas.push(...test)
     }
     res.status(200).json({
-      message: "Student Carts Fetched",
-      data: cartDatas,
-    });
+      message: "Cart fetchd", data: cartDatas
+    })
   }
 }
 
