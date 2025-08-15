@@ -45,7 +45,7 @@ export class StudentCartController {
     })
     for (let data of datas) {
       //69237346-4d84-11f0-ad8d-3e73c3890034
-      const test = await sequelize.query(`SELECT * FROM course_${data.instituteId} WHERE id='${data.courseId}'`, {
+      const test = await sequelize.query(`SELECT * FROM course_${data.instituteId} JOIN category_${data.instituteId} ON course_${data.instituteId}.categoryId = category_${data.instituteId}.id WHERE id='${data.courseId}'`, {
         type: QueryTypes.SELECT
       })
       console.log(test)
@@ -54,7 +54,26 @@ export class StudentCartController {
     res.status(200).json({
       message: "Cart fetchd", data: cartDatas
     })
+
   }
+
+
+  static async deleteStudentCartItem(req: IExtendedRequest, res: Response) {
+    const userId = req.user?.id
+    const cartTableId = req.params.cartTableId;
+    if (!cartTableId) return res.status(400).json({
+      message: "Please provide cart table id"
+    })
+
+    await sequelize.query(`DELETE FROM student_cart_${userId} WHERE cartTableId=?`, {
+      type: QueryTypes.DELETE,
+      replacements: [cartTableId]
+    })
+    res.status(200).json({
+      message: "Deleted successfully"
+    })
+  }
+
 }
 
 /**@StudentCartController -> Overview */

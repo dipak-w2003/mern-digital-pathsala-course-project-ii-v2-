@@ -18,6 +18,8 @@ router
     Middleware.changeUserIdForTableName,
     Middleware.restrictTo(UserRole.Student),
     asyncErrorHandler(StudentCartController.fetchStudentCartItems)
-  );
+  )
+
+router.route("/cart/:id").delete(Middleware.isLoggedIn, Middleware.restrictTo(UserRole.Student)).delete(asyncErrorHandler(StudentCartController.deleteStudentCartItem))
 
 export default router;
